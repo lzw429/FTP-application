@@ -110,17 +110,25 @@ public class ClientThread extends Thread {
                 }
             }
 
-            // Size 命令
+            // Size 命令：使用命令端口返回文件大小
 
             // REST 命令
-            // RETR 命令
+
+            // RETR 命令：客户端从服务器下载文件
             else if (command.toUpperCase().startsWith("RETR")) {
                 arg = command.substring(4).trim();
+                if (arg.equals("")) {
+                    writer.println("501 Syntax error");
+                    writer.flush();
+                    continue;
+                }
                 try {
+                    writer.println("150 Opening data channel for file transfer.");
+                    writer.flush();
                     RandomAccessFile outFile = null;
                     OutputStream outSocket = null;
                     try {
-                        outFile = new RandomAccessFile(dir + "/" + arg, "r");
+                        outFile = new RandomAccessFile(dir + "/" + arg, "r");// 命令参数arg是文件名，dir是服务器当前目录名；r是读模式
                         outSocket = tempSocket.getOutputStream();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -141,10 +149,17 @@ public class ClientThread extends Thread {
                     e.printStackTrace();
                 }
             }
-            // STOR 命令
+            // STOR 命令：客户端上传文件到服务器
             else if (command.toUpperCase().startsWith("STOR")) {
                 arg = command.substring(4).trim();
+                if (arg.equals("")) {
+                    writer.println("501 Syntax error");
+                    writer.flush();
+                    continue;
+                }
                 try {
+                    writer.println("150 Opening data channel for file transfer.");
+                    writer.flush();
                     RandomAccessFile inFile = null;
                     InputStream inSocket = null;
                     try {
@@ -169,7 +184,7 @@ public class ClientThread extends Thread {
                     e.printStackTrace();
                 }
             }
-            // QUIT 命令
+            // QUIT 命令：断开连接
             else if (command.toUpperCase().startsWith("QUIT")) {
                 writer.println("221 Goodbye");
                 writer.flush();
@@ -180,11 +195,11 @@ public class ClientThread extends Thread {
                     e.printStackTrace();
                 }
             }
-            // CWD 命令
+            // CWD 命令：设置用户的工作目录，即上传和下载文件的位置
             else if (command.toUpperCase().startsWith("CWD")) {
 
             }
-            // LIST 命令
+            // LIST 命令：列出服务器指定目录下的文件信息，包括文件大小、文件最后修改时间和文件名称
             else if (command.toUpperCase().startsWith("LIST")) {
                 try {
                     writer.println("150 Opening data channel for directory list.");

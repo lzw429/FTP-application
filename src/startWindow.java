@@ -17,6 +17,7 @@ public class startWindow {
     private JButton disConnectButton;
     private JTextField usernameField;
     private JList fileList;
+
     private JFileChooser fc = new JFileChooser();
     private Client client = new Client();
 
@@ -82,6 +83,15 @@ public class startWindow {
                 }
             }
         });
+        downloadButton.addMouseListener(new MouseAdapter() {
+            // 下载按钮被按下
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+
+            }
+        });
+
     }
 
     public static void main(String[] args) {

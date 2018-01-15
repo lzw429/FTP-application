@@ -1,3 +1,5 @@
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+
 import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
@@ -54,24 +56,33 @@ public class Client {
         while ((line = dataReader.readLine()) != null) {
             String lineBytes = new String(line.getBytes("ISO-8859-1"), "utf-8");
             String[] fileInfo = getFileInfo(lineBytes);
-            System.out.println(fileInfo[2] + " " + fileInfo[1] + " " + fileInfo[0] + "byte");
+            FileInfo file = new FileInfo(fileInfo[2], fileInfo[1], Integer.parseInt(fileInfo[0]));
+            System.out.println(file);
         }
         response = reader.readLine();
         System.out.println(response); // 226 Transfer OK
     }
 
-    void downloadFile() {
+    void downloadFile(String filename) throws IOException {
         // TODO 下载文件
         // 客户端和FTP服务器建立Socket连接
         // 向服务器发送USER、PASS命令登录FTP服务器
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
         // 使用RETR命令下载文件
+        writer.println("RETR " + filename);
+        writer.flush();
+        response = reader.readLine();
+        System.out.println(response);
         // 从数据端口中接收数据，保存到本地磁盘
         // 在下载完毕后断开数据连接并发送QUIT命令退出
     }
 
-    void uploadFile() {
+    void uploadFile() throws IOException {
         // TODO 上传文件
+        writer.println("STOR ");
+        writer.flush();
+        response = reader.readLine();
+        System.out.println(response);
     }
 
     void disConnect() throws IOException {
