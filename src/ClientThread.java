@@ -1,3 +1,4 @@
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import sun.nio.cs.Surrogate;
 
 import java.io.*;
@@ -39,143 +40,173 @@ public class ClientThread extends Thread {
         int port_high = 0;
         int port_low = 0;
         String recv_ip = "";//接收文件的IP地址
+        boolean is_login = false;
         Socket tempSocket = null;
+
         while (true) {
             try {
+                // 获取客户端的命令
                 command = reader.readLine();
                 if (command == null)
                     break;
             } catch (IOException e) {
+                writer.println("331 Failed to get command");
+                writer.flush();
                 break;
             }
-        }
 
-        // User 命令
-        if (command.toUpperCase().startsWith("USER")) {
-            username = command.substring(4).trim();
-        }
-        // Pass 命令
-        else if (command.toUpperCase().startsWith("PASS")) {
-            password = command.substring(4).trim();
-        }
-        // PASV 命令
-        else if (command.toUpperCase().startsWith("PASV")) {
-            ServerSocket ss = null;
-            while (true) {
-                // 获取服务器空闲端口
-                port_high = 1 + generator.nextInt(20);
-                port_low = 1 + generator.nextInt(1000);
-                try {
-                    ss = new ServerSocket(port_high * 256 + port_low);
-                    break;
-                } catch (IOException e) {
-                    continue;
+            // User 命令
+            if (command.toUpperCase().startsWith("USER")) {
+                username = command.substring(4).trim();
+                if (username.equals("")) {
+                    writer.println("501 Syntax error");
+                    writer.flush();
+                } else {
+                    writer.println("331 Password required for " + username);
+                    writer.flush();
+                }
+                is_login = false;
+            }
+            // Pass 命令
+            else if (command.toUpperCase().startsWith("PASS")) {
+                password = command.substring(4).trim();
+                if (username.equals("root") && password.equals("root")) {
+                    writer.println("230 Logged on");
+                    writer.flush();
+                    is_login = true;
+                } else {
+                    writer.println("530 Login or password incorrect!");
+                    writer.flush();
                 }
             }
-            InetAddress i = null;
-            try {
-                i = InetAddress.getLocalHost();
-            } catch (UnknownHostException e1) {
-                e1.printStackTrace();
-            }
-            writer.println("227 Entering Passive Mode (" + i.getHostAddress().replace(".", ",") + "," + port_high + "," + port_low + ")");
-            writer.flush();
-            try {
-                tempSocket = ss.accept();
-                ss.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Size 命令
-
-        // REST 命令
-        // RETR 命令
-        else if (command.toUpperCase().startsWith("RETR")) {
-            arg = command.substring(4).trim();
-            try {
-                RandomAccessFile outFile = null;
-                OutputStream outSocket = null;
-                try {
-                    outFile = new RandomAccessFile(dir + "/" + arg, "r");
-                    outSocket = tempSocket.getOutputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                byte buffer[] = new byte[1024];
-                int length;
-                try {
-                    while ((length = outFile.read(buffer)) != -1) {
-                        outSocket.write(buffer, 0, length);
+            // PASV 命令
+            else if (command.toUpperCase().startsWith("PASV")) {
+                ServerSocket ss = null;
+                while (true) {
+                    // 获取服务器空闲端口，作为数据端口
+                    port_high = 1 + generator.nextInt(20);
+                    port_low = 1 + generator.nextInt(1000);
+                    try {
+                        ss = new ServerSocket(port_high * 256 + port_low);
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
                     }
-                    outSocket.close();
-                    outFile.close();
-                    tempSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        // STOR 命令
-        else if (command.toUpperCase().startsWith("STOR")) {
-            arg = command.substring(4).trim();
-            try {
-                RandomAccessFile inFile = null;
-                InputStream inSocket = null;
+                InetAddress i = null;
                 try {
-                    inFile = new RandomAccessFile(dir + "/" + arg, "rw");
-                    inSocket = tempSocket.getInputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    i = InetAddress.getLocalHost();
+                } catch (UnknownHostException e1) {
+                    e1.printStackTrace();
                 }
-                byte buffer[] = new byte[1024];
-                int length;
-                try {
-                    while ((length = inSocket.read(buffer)) != -1) {
-                        inFile.write(buffer, 0, length);
-                    }
-                    inSocket.close();
-                    inFile.close();
-                    tempSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        // QUIT 命令
-        else if (command.toUpperCase().startsWith("QUIT")) {
-            writer.println("221 Goodbye");
-            writer.flush();
-            try {
-                Thread.currentThread();
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        // CWD 命令
-        else if (command.toUpperCase().startsWith("CWD")) {
-
-        }
-        // LIST 命令
-        else if (command.toUpperCase().startsWith("LIST")) {
-            try {
-                writer.println("150 Opening data channel for directory list.");
+                writer.println("227 Entering Passive Mode (" + i.getHostAddress().replace(".", ",") + "," + port_high + "," + port_low + ")");
                 writer.flush();
-                PrintWriter printWriter = null;
                 try {
-                    printWriter = new PrintWriter(tempSocket.getOutputStream(), true);
+                    tempSocket = ss.accept();
+                    ss.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
 
-            } catch (Exception e) {
-                e.printStackTrace();
+            // Size 命令
+
+            // REST 命令
+            // RETR 命令
+            else if (command.toUpperCase().startsWith("RETR")) {
+                arg = command.substring(4).trim();
+                try {
+                    RandomAccessFile outFile = null;
+                    OutputStream outSocket = null;
+                    try {
+                        outFile = new RandomAccessFile(dir + "/" + arg, "r");
+                        outSocket = tempSocket.getOutputStream();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    byte buffer[] = new byte[1024];
+                    int length;
+                    try {
+                        while ((length = outFile.read(buffer)) != -1) {
+                            outSocket.write(buffer, 0, length);
+                        }
+                        outSocket.close();
+                        outFile.close();
+                        tempSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            // STOR 命令
+            else if (command.toUpperCase().startsWith("STOR")) {
+                arg = command.substring(4).trim();
+                try {
+                    RandomAccessFile inFile = null;
+                    InputStream inSocket = null;
+                    try {
+                        inFile = new RandomAccessFile(dir + "/" + arg, "rw");
+                        inSocket = tempSocket.getInputStream();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    byte buffer[] = new byte[1024];
+                    int length;
+                    try {
+                        while ((length = inSocket.read(buffer)) != -1) {
+                            inFile.write(buffer, 0, length);
+                        }
+                        inSocket.close();
+                        inFile.close();
+                        tempSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            // QUIT 命令
+            else if (command.toUpperCase().startsWith("QUIT")) {
+                writer.println("221 Goodbye");
+                writer.flush();
+                try {
+                    Thread.currentThread();
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            // CWD 命令
+            else if (command.toUpperCase().startsWith("CWD")) {
+
+            }
+            // LIST 命令
+            else if (command.toUpperCase().startsWith("LIST")) {
+                try {
+                    writer.println("150 Opening data channel for directory list.");
+                    writer.flush();
+                    PrintWriter dataWriter = null;
+                    try {
+                        dataWriter = new PrintWriter(tempSocket.getOutputStream(), true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    Server.getFileInfo(dataWriter, dir);
+                    try {
+                        tempSocket.close();
+                        dataWriter.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    writer.println("226 Transfer OK");
+                    writer.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
