@@ -51,13 +51,6 @@ public class Client {
             files.add(file);
             System.out.println(file);// 标准输出文件信息
         }
-      /*  BufferedInputStream dataReader = new BufferedInputStream(dataSocket.getInputStream());// 读数据端口
-        BufferedOutputStream fileWriter = new BufferedOutputStream(new FileOutputStream(newFile));// 写到本地磁盘
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = dataReader.read(buffer)) != -1) {
-            fileWriter.write(buffer, 0, len);
-        }*/
         dataReader.close();
         response = reader.readLine();
         System.out.println(response); // 226 Transfer OK
@@ -69,14 +62,25 @@ public class Client {
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
         System.out.println("下载到目录 " + localPath);
         PASV();// dataSocket
+
+        // 如果本地存在该文件，使用REST命令指定偏移量，实现下载断点续传
+        File downloaded = new File(localPath + "/" + filename);
+        long size = 0;
+        if (downloaded.exists() && downloaded.isFile())
+            size = downloaded.length();
+        writer.println("REST " + size);// 将size告知服务器，即使size为0
+        writer.flush();
+        response = reader.readLine();
+        System.out.println(response);
+
         // 使用RETR命令下载文件
         writer.println("RETR " + filename);
         writer.flush();
         response = reader.readLine();
         System.out.println(response);// 150 Opening data channel for file transfer.
-        File newFile = new File(localPath + "/" + filename);
+
         BufferedInputStream dataReader = new BufferedInputStream(dataSocket.getInputStream());// 读数据端口
-        BufferedOutputStream fileWriter = new BufferedOutputStream(new FileOutputStream(newFile));// 写到本地磁盘
+        BufferedOutputStream fileWriter = new BufferedOutputStream(new FileOutputStream(downloaded));// 写到本地磁盘
         byte[] buffer = new byte[1024];
         int len;
         while ((len = dataReader.read(buffer)) != -1) {
@@ -90,34 +94,39 @@ public class Client {
 
     void uploadFile(File file) throws IOException {
         // TODO 上传文件
-        String fileName = file.getName();
-        System.out.println("上传文件 " + fileName);
-        PASV();// dataSocket
 
-        writer.println("SIZE " + fileName);
-        writer.flush();
-        response = reader.readLine();
-        long size = getSize(response);
-        System.out.println("The size of " + fileName + " on the server is " + size + " bytes.");
+        if (file.isFile()) { // 上传文件
+            String fileName = file.getName();
+            System.out.println("上传文件 " + fileName);
+            PASV();// dataSocket
 
-        writer.println("STOR " + fileName);
-        writer.flush();
-        response = reader.readLine();
-        System.out.println(response);// 150 Opening data channel for file transfer.
+            // 如果服务器存在该文件，使用SIZE命令指定偏移量，实现上传断点续传
+            writer.println("SIZE " + fileName);
+            writer.flush();
+            response = reader.readLine();
+            long size = getSize(response);
+            System.out.println("The size of " + fileName + " on the server is " + size + " bytes.");
 
-        BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
-        BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
-        long skipSize = fileReader.skip(size);
-        System.out.println(skipSize + " bytes has been actually skipped.");
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = fileReader.read(buffer)) != -1) {
-            dataWriter.write(buffer, 0, len);
+            writer.println("STOR " + fileName);
+            writer.flush();
+            response = reader.readLine();
+            System.out.println(response);// 150 Opening data channel for file transfer.
+
+            BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
+            BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
+            long skipSize = fileReader.skip(size);
+            System.out.println(skipSize + " bytes has been actually skipped.");
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = fileReader.read(buffer)) != -1) {
+                dataWriter.write(buffer, 0, len);
+            }
+            // 在上传完毕后断开数据连接
+            dataWriter.close();
+            fileReader.close();
+            System.out.println(fileName + " 上传完成");
+        } else if (file.isDirectory()) { // 上传文件夹
         }
-        // 在上传完毕后断开数据连接
-        dataWriter.close();
-        fileReader.close();
-        System.out.println(fileName + " 上传完成");
     }
 
     void disConnect() throws IOException {
@@ -126,6 +135,20 @@ public class Client {
         writer.flush();
         response = reader.readLine();
         System.out.println(response);
+    }
+
+    ArrayList<FileInfo> changeDir(String path) throws IOException {
+        // 改变服务器工作目录
+        writer.println("CWD " + path);
+        writer.flush();
+        response = reader.readLine();
+        System.out.println(response);
+        String status = response.substring(0, 3);
+        if (status.equals("250")) {
+            PASV();
+            return getFileDir();
+        } else
+            return new ArrayList<FileInfo>();
     }
 
     private String[] getSocket(String txt) {
@@ -178,6 +201,7 @@ public class Client {
     }
 
     private int getSize(String txt) {
+        // 通过正则表达式，从response中获取size
         String re1 = "(213)";    // Integer Number 1
         String re2 = "( )";    // White Space 1
         String re3 = "(\\d+)";    // Integer Number 2

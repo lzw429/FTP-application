@@ -1,5 +1,4 @@
 import java.io.*;
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -37,6 +36,7 @@ public class ClientThread extends Thread {
         String arg = "";
         int port_high = 0;
         int port_low = 0;
+        int downloadSkipSize = 0; // 下载给客户端跳过的字节数
         String recv_ip = "";//接收文件的IP地址
         boolean is_login = false;
         Socket tempSocket = null;
@@ -93,7 +93,6 @@ public class ClientThread extends Thread {
                         break;
                     } catch (IOException e) {
                         e.printStackTrace();
-                        continue;
                     }
                 }
                 InetAddress i = null;
@@ -135,7 +134,17 @@ public class ClientThread extends Thread {
             }// end SIZE
 
             // REST 命令
-            else if (command.toUpperCase().startsWith())
+            else if (command.toUpperCase().startsWith("REST")) {
+                arg = command.substring(4).trim(); // 参数是下载要跳过的字节数
+                if (arg.equals("")) {
+                    writer.println("501 Syntax error");
+                    writer.flush();
+                    continue;
+                }
+                downloadSkipSize = Integer.parseInt(arg);
+                writer.println("211 Offset " + downloadSkipSize + " bytes has been set.");
+                writer.flush();
+            }
 
             // RETR 命令：客户端从服务器下载文件
             else if (command.toUpperCase().startsWith("RETR")) {
@@ -152,6 +161,8 @@ public class ClientThread extends Thread {
                     OutputStream outSocket = null;
                     try {
                         outFile = new RandomAccessFile(dir + "/" + arg, "r");// 命令参数arg是文件名，dir是服务器当前目录名；r是读模式
+                        int skipBytes = outFile.skipBytes((int) downloadSkipSize);
+                        System.out.println(skipBytes + " bytes of " + arg + " has been actually skipped.");
                         outSocket = tempSocket.getOutputStream();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -224,7 +235,21 @@ public class ClientThread extends Thread {
 
             // CWD 命令：设置用户的工作目录，即上传和下载文件的位置
             else if (command.toUpperCase().startsWith("CWD")) {
-
+                arg = command.substring(3).trim(); // 参数是工作目录
+                if (arg.equals("")) {
+                    writer.println("250 Broken client detected, missing argument to CWD.");
+                    writer.flush();
+                    continue;
+                }
+                File file = new File(arg);
+                if (file.exists()) {
+                    dir = arg;
+                    writer.println("250 CWD successful. " + dir + " is current directory.");
+                    writer.flush();
+                } else {
+                    writer.println("550 CWD failed. " + arg + " : directory not found.");
+                    writer.flush();
+                }
             }
             // LIST 命令：列出服务器指定目录下的文件信息，包括文件大小、文件最后修改时间和文件名称
             else if (command.toUpperCase().startsWith("LIST")) {

@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="5" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="954" height="400"/>
+      <xy x="20" y="20" width="740" height="425"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -26,24 +26,14 @@
           <text value="主机名"/>
         </properties>
       </component>
-      <component id="24832" class="javax.swing.JTextField">
+      <component id="24832" class="javax.swing.JTextField" binding="dirField">
         <constraints>
           <grid row="2" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="200" height="-1"/>
+            <preferred-size width="400" height="-1"/>
           </grid>
         </constraints>
         <properties>
           <text value="C:\Users\舒意恒\Documents\GitHub\network-application\server_dir"/>
-        </properties>
-      </component>
-      <component id="daaa6" class="javax.swing.JButton" binding="uploadButton">
-        <constraints>
-          <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="80" height="25"/>
-          </grid>
-        </constraints>
-        <properties>
-          <text value="上传"/>
         </properties>
       </component>
       <component id="bc13e" class="javax.swing.JLabel">
@@ -72,17 +62,11 @@
           <text value="服务器目录"/>
         </properties>
       </component>
-      <component id="11e2e" class="javax.swing.JButton" binding="fileChooseButton">
-        <constraints>
-          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="选择文件"/>
-        </properties>
-      </component>
       <component id="d40bc" class="javax.swing.JButton" binding="connectButton">
         <constraints>
-          <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="80" height="25"/>
+          </grid>
         </constraints>
         <properties>
           <text value="连接"/>
@@ -136,7 +120,9 @@
       </component>
       <component id="d397" class="javax.swing.JLabel" binding="statusLabel">
         <constraints>
-          <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="80" height="25"/>
+          </grid>
         </constraints>
         <properties>
           <text value="未连接"/>
@@ -150,25 +136,49 @@
         </constraints>
         <properties/>
       </component>
-      <vspacer id="c63b5">
-        <constraints>
-          <grid row="4" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
-        </constraints>
-      </vspacer>
-      <component id="f1d96" class="javax.swing.JButton" binding="downloadButton">
-        <constraints>
-          <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="下载"/>
-        </properties>
-      </component>
       <component id="d9188" class="javax.swing.JLabel" binding="dataStatus">
         <constraints>
           <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value=""/>
+        </properties>
+      </component>
+      <component id="6b582" class="javax.swing.JButton" binding="changeDir">
+        <constraints>
+          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="80" height="25"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="转到"/>
+        </properties>
+      </component>
+      <vspacer id="c0077">
+        <constraints>
+          <grid row="4" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+            <preferred-size width="76" height="300"/>
+          </grid>
+        </constraints>
+      </vspacer>
+      <component id="daaa6" class="javax.swing.JButton" binding="uploadButton">
+        <constraints>
+          <grid row="3" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="80" height="25"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="上传"/>
+        </properties>
+      </component>
+      <component id="f1d96" class="javax.swing.JButton" binding="downloadButton">
+        <constraints>
+          <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="80" height="25"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="下载"/>
         </properties>
       </component>
     </children>

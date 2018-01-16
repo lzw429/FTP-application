@@ -1,11 +1,5 @@
 import javax.swing.*;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -23,24 +17,17 @@ public class startWindow {
     private JLabel statusLabel;
     private JButton disConnectButton;
     private JTextField usernameField;
+    private JLabel dataStatus;
+    private JTextField dirField;
 
     private JFileChooser fc = new JFileChooser();
     private Client client = new Client();
 
     private DefaultListModel fileListModel;
     private JList<FileInfo> fileList;
-    private JLabel dataStatus;
+    private JButton changeDir;
 
     private startWindow() { // 启动窗口构造方法
-        fileChooseButton.addMouseListener(new MouseAdapter() {
-            // 文件选择按钮被点击
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                fc.showOpenDialog(new JPanel());
-            }
-        });
-
         connectButton.addMouseListener(new MouseAdapter() {
             // 连接按钮被按下
             @Override
@@ -77,6 +64,10 @@ public class startWindow {
                     return;
                 }
                 FileInfo file = fileList.getSelectedValue(); // 将被下载的文件
+                if (file == null) {
+                    JOptionPane.showMessageDialog(null, "请选择文件", "警告", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 JFileChooser fc = new JFileChooser();
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);// 只能选择目录
                 int fcRes = fc.showOpenDialog(new JPanel()); // 选择下载目的目录
@@ -107,13 +98,29 @@ public class startWindow {
                 fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // 可选择文件或目录
                 int fcRes = fc.showOpenDialog(new JPanel()); // 选择上传的文件或目录
                 if (fcRes == JFileChooser.APPROVE_OPTION) {
-                    File file = fc.getSelectedFile();// 被选中的文件集合
-                    try {
-                        client.uploadFile(file);
-                        dataStatus.setText("上传完成");
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        statusLabel.setText("读写异常");
+                    File file = fc.getSelectedFile();// 被选中的文件
+                    if (file.isFile()) { // 上传文件
+                        try {
+                            client.uploadFile(file);
+                            dataStatus.setText("上传完成");
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                            statusLabel.setText("读写异常");
+                        }
+                    } else if (file.isDirectory()) { // 上传文件夹
+                        String files[] = file.list();
+                        int len = files.length;
+                        for (int i = 0; i < len; i++) {
+                            File f = new File(file.getPath() + "/" + files[i]);
+                            try {
+                                client.uploadFile(f);
+                                int No = i + 1;
+                                dataStatus.setText("上传完成：" + No + "/" + len);
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                                statusLabel.setText("读写异常");
+                            }
+                        }
                     }
                 }
 
@@ -137,10 +144,30 @@ public class startWindow {
                 }
             }
         });
+
+        changeDir.addMouseListener(new MouseAdapter() {
+            // 转到按钮被按下
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (!statusLabel.getText().equals("已连接"))
+                    return;
+                try {
+                    ArrayList<FileInfo> files = client.changeDir(dirField.getText());
+                    fileListModel = new DefaultListModel();
+                    for (FileInfo fileInfo : files)
+                        fileListModel.addElement(fileInfo);
+                    fileList.setModel(fileListModel);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    dataStatus.setText("读写异常");
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("FTP");
+        JFrame frame = new JFrame("FTP客户端");
         frame.setContentPane(new startWindow().mainPanel);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();
