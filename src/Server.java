@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
@@ -24,7 +25,7 @@ public class Server {
         }
     }
 
-    public static void getFileInfo(PrintWriter writer, String path) {
+    public static void getFileInfo(PrintWriter writer, String path) throws UnsupportedEncodingException {
         // TODO 获取服务器上的文件信息
         File dir = new File(path);
         if (!dir.isDirectory()) {
@@ -33,15 +34,20 @@ public class Server {
         }
 
         File files[] = dir.listFiles();
+        if (files == null)
+            return;
+
         String fileDate;
         for (File file : files) {
             fileDate = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new Date(file.lastModified()));
+            String filename = new String(file.getName().getBytes("utf-8"), "ISO-8859-1");
             if (file.isDirectory()) {
-                writer.println(fileDate + " " + file.getName());
+                writer.println(fileDate + " " + filename);
             } else {
-                writer.println(file.length() + " " + fileDate + " " + file.getName());
+                writer.println(file.length() + " " + fileDate + " " + filename);
             }
             writer.flush();
         }
     }
 }
+

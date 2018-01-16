@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +51,13 @@ public class Client {
             files.add(file);
             System.out.println(file);// 标准输出文件信息
         }
+      /*  BufferedInputStream dataReader = new BufferedInputStream(dataSocket.getInputStream());// 读数据端口
+        BufferedOutputStream fileWriter = new BufferedOutputStream(new FileOutputStream(newFile));// 写到本地磁盘
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = dataReader.read(buffer)) != -1) {
+            fileWriter.write(buffer, 0, len);
+        }*/
         dataReader.close();
         response = reader.readLine();
         System.out.println(response); // 226 Transfer OK
@@ -58,43 +66,62 @@ public class Client {
 
     void downloadFile(String filename, String localPath) throws IOException {
         // TODO 下载文件
-        // 客户端和FTP服务器建立Socket连接
-        // 向服务器发送USER、PASS命令登录FTP服务器
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
-        // 使用RETR命令下载文件
         System.out.println("下载到目录 " + localPath);
         PASV();// dataSocket
+        // 使用RETR命令下载文件
         writer.println("RETR " + filename);
         writer.flush();
         response = reader.readLine();
         System.out.println(response);// 150 Opening data channel for file transfer.
         File newFile = new File(localPath + "/" + filename);
-        BufferedReader dataReader = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));// 读数据端口
-        BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newFile)));// 写到本地磁盘
-        String line = "";
-        while ((line = dataReader.readLine()) != null) {
-            String lineBytes = new String(line.getBytes("ISO-8859-1"), "utf-8");
-            fileWriter.write(lineBytes + "\n");
+        BufferedInputStream dataReader = new BufferedInputStream(dataSocket.getInputStream());// 读数据端口
+        BufferedOutputStream fileWriter = new BufferedOutputStream(new FileOutputStream(newFile));// 写到本地磁盘
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = dataReader.read(buffer)) != -1) {
+            fileWriter.write(buffer, 0, len);
         }
+        // 在下载完毕后断开数据连接
         dataReader.close();
         fileWriter.close();
-        System.out.println("下载完成");
-        // 在下载完毕后断开数据连接并发送QUIT命令退出
+        System.out.println(filename + " 下载完成");
     }
 
     void uploadFile(File file) throws IOException {
         // TODO 上传文件
         String fileName = file.getName();
-        System.out.println("上传文件 "+fileName);
+        System.out.println("上传文件 " + fileName);
         PASV();// dataSocket
-        writer.println("STOR " + fileName);
+        writer.println("SIZE");
         writer.flush();
         response = reader.readLine();
-        System.out.println(response);// 150 Opening data channel for file transfer.
+        int size = getSize(response);
+        if (size == 0)// 文件不存在，从头开始上传
+        {
+            writer.println("STOR " + fileName);
+            writer.flush();
+            response = reader.readLine();
+            System.out.println(response);// 150 Opening data channel for file transfer.
+
+            BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
+            BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = fileReader.read(buffer)) != -1) {
+                dataWriter.write(buffer, 0, len);
+            }
+            // 在上传完毕后断开数据连接
+            dataWriter.close();
+            fileReader.close();
+            System.out.println(fileName + " 上传完成");
+        } else if (size > 0) {
+            
+        }
     }
 
     void disConnect() throws IOException {
-        // 在下载完毕后断开数据连接并发送QUIT命令退出
+        // 关闭控制连接
         writer.println("QUIT");
         writer.flush();
         response = reader.readLine();
@@ -150,7 +177,20 @@ public class Client {
         return res;
     }
 
-    void PASV() throws IOException {
+    private int getSize(String txt) {
+        String re1 = "(213)";    // Integer Number 1
+        String re2 = "( )";    // White Space 1
+        String re3 = "(\\d+)";    // Integer Number 2
+
+        Pattern p = Pattern.compile(re1 + re2 + re3, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Matcher m = p.matcher(txt);
+        if (m.find()) {
+            return Integer.parseInt(m.group(3));
+        }
+        return 0;
+    }
+
+    private void PASV() throws IOException {
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
         writer.println("PASV");
         writer.flush();

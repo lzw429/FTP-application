@@ -101,39 +101,38 @@ public class startWindow {
                 fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // 可选择文件或目录
                 int fcRes = fc.showOpenDialog(new JPanel()); // 选择上传的文件或目录
                 if (fcRes == JFileChooser.APPROVE_OPTION) {
-                    File[] files = fc.getSelectedFiles();// 被选中的文件集合
-                    int length = files.length;
-                    int cnt = 0;
-                    for (File file : files) {
-                        try {
-                            client.uploadFile(file);
-                            cnt++;
-                            dataStatus.setText("上传完成：" + cnt + "/" + length);
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                            statusLabel.setText("读写异常");
-                        }
+                    File file = fc.getSelectedFile();// 被选中的文件集合
+                    try {
+                        client.uploadFile(file);
+                        dataStatus.setText("上传完成");
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                        statusLabel.setText("读写异常");
                     }
                 }
+
             }
         });
 
-        disConnectButton.addMouseListener(new MouseAdapter() {
-            // 断开按钮被按下
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                if (!statusLabel.getText().equals("已连接"))
-                    return;
-                try {
-                    client.disConnect();
-                    statusLabel.setText("已断开");
-                    fileList.setModel(new DefaultListModel<>());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        });
+        disConnectButton.addMouseListener(new
+
+                                                  MouseAdapter() {
+                                                      // 断开按钮被按下
+                                                      @Override
+                                                      public void mouseClicked(MouseEvent e) {
+                                                          super.mouseClicked(e);
+                                                          if (!statusLabel.getText().equals("已连接"))
+                                                              return;
+                                                          try {
+                                                              client.disConnect();
+                                                              statusLabel.setText("已断开");
+                                                              dataStatus.setText("");
+                                                              fileList.setModel(new DefaultListModel<>());
+                                                          } catch (IOException e1) {
+                                                              e1.printStackTrace();
+                                                          }
+                                                      }
+                                                  });
     }
 
     public static void main(String[] args) {

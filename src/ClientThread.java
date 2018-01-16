@@ -1,7 +1,5 @@
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
-import sun.nio.cs.Surrogate;
-
 import java.io.*;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -115,6 +113,25 @@ public class ClientThread extends Thread {
             } // end PASV
 
             // Size 命令：使用命令端口返回文件大小
+            else if (command.toUpperCase().startsWith("SIZE")) {
+                arg = command.substring(4).trim();
+                if (arg.equals("")) {
+                    writer.println("501 Syntax error");
+                    writer.flush();
+                    continue;
+                }
+                File file = new File(dir + "/" + arg);
+                if (!file.exists()) // 文件不存在，即大小为0
+                {
+                    writer.println("213 0");
+                    writer.flush();
+                } else if (file.isFile()) {
+                    int size = (int) file.length();
+                    writer.println("213 " + size);
+                    System.out.println("The size of" + dir + "/" + arg + " is " + size + " byte.");
+                    writer.flush();
+                }
+            }// end SIZE
 
             // REST 命令
 
@@ -138,10 +155,10 @@ public class ClientThread extends Thread {
                         e.printStackTrace();
                     }
                     byte buffer[] = new byte[1024];
-                    int length;
+                    int len;
                     try {
-                        while ((length = outFile.read(buffer)) != -1) {
-                            outSocket.write(buffer, 0, length);
+                        while ((len = outFile.read(buffer)) != -1) {
+                            outSocket.write(buffer, 0, len);
                         }
                         outSocket.close();
                         outFile.close();
@@ -174,10 +191,10 @@ public class ClientThread extends Thread {
                         e.printStackTrace();
                     }
                     byte buffer[] = new byte[1024];
-                    int length;
+                    int len;
                     try {
-                        while ((length = inSocket.read(buffer)) != -1) {
-                            inFile.write(buffer, 0, length);
+                        while ((len = inSocket.read(buffer)) != -1) {
+                            inFile.write(buffer, 0, len);
                         }
                         inSocket.close();
                         inFile.close();
@@ -229,6 +246,7 @@ public class ClientThread extends Thread {
                 }
             }// end LIST
         }// end while
+
         // 客户端中断连接后，本线程中断连接
         try {
             reader.close();
