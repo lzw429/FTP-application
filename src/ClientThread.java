@@ -50,6 +50,7 @@ public class ClientThread extends Thread {
                 if (command == null)
                     break;
             } catch (IOException e) {
+                e.printStackTrace();
                 writer.println("331 Failed to get command");
                 writer.flush();
                 break;
@@ -66,7 +67,8 @@ public class ClientThread extends Thread {
                     writer.flush();
                 }
                 is_login = false;
-            }
+            } // end USER
+
             // Pass 命令
             else if (command.toUpperCase().startsWith("PASS")) {
                 password = command.substring(4).trim();
@@ -78,7 +80,8 @@ public class ClientThread extends Thread {
                     writer.println("530 Login or password incorrect!");
                     writer.flush();
                 }
-            }
+            } // end PASS
+
             // PASV 命令
             else if (command.toUpperCase().startsWith("PASV")) {
                 ServerSocket ss = null;
@@ -103,12 +106,12 @@ public class ClientThread extends Thread {
                 writer.println("227 Entering Passive Mode (" + i.getHostAddress().replace(".", ",") + "," + port_high + "," + port_low + ")");
                 writer.flush();
                 try {
-                    tempSocket = ss.accept();
+                    tempSocket = ss.accept(); // 传输数据的临时套接字
                     ss.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
+            } // end PASV
 
             // Size 命令：使用命令端口返回文件大小
 
@@ -148,7 +151,8 @@ public class ClientThread extends Thread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
+            }// end RETR
+
             // STOR 命令：客户端上传文件到服务器
             else if (command.toUpperCase().startsWith("STOR")) {
                 arg = command.substring(4).trim();
@@ -183,7 +187,8 @@ public class ClientThread extends Thread {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
+            }// end STOR
+
             // QUIT 命令：断开连接
             else if (command.toUpperCase().startsWith("QUIT")) {
                 writer.println("221 Goodbye");
@@ -194,7 +199,8 @@ public class ClientThread extends Thread {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
+            }// end QUIT
+
             // CWD 命令：设置用户的工作目录，即上传和下载文件的位置
             else if (command.toUpperCase().startsWith("CWD")) {
 
@@ -211,18 +217,25 @@ public class ClientThread extends Thread {
                         e.printStackTrace();
                     }
                     Server.getFileInfo(dataWriter, dir);
-                    try {
-                        tempSocket.close();
-                        dataWriter.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    tempSocket.close();
+                    dataWriter.close();
+
                     writer.println("226 Transfer OK");
                     writer.flush();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
+            }// end LIST
+        }// end while
+        // 客户端中断连接后，本线程中断连接
+        try {
+            reader.close();
+            writer.close();
+            socketClient.close();
+            if (tempSocket != null)
+                tempSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -1,8 +1,6 @@
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
-
-import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,7 +11,7 @@ public class Client {
     private String response; // 来自服务器的应答
     private Socket dataSocket; // 数据端口
 
-    void connectServer(String host, int port) throws IOException {
+    ArrayList<FileInfo> connectServer(String host, int port) throws IOException {
         // 客户端和FTP服务器建立Socket连接
         socket = new Socket(host, port);
         reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -22,29 +20,21 @@ public class Client {
         // 向服务器发送USER、PASS命令登录FTP服务器
         writer.println("USER root");
         writer.flush();
-
         response = reader.readLine();
         System.out.println(response);
+
         writer.println("PASS root");
         writer.flush();
-
         response = reader.readLine();
         System.out.println(response);
-        // 使用PASV命令得到服务器监听的端口号，建立数据连接
-        writer.println("PASV");
-        writer.flush();
-        response = reader.readLine(); // "227 entering passive mode (h1,h2,h3,h4,p1,p2)"
-        System.out.println(response);
-        // 使用p1*256+p2计算出数据端口，连接数据端口，准备接收数据
-        String[] socket = getSocket(response);
-        String dataSocket_IP = socket[0] + '.' + socket[1] + '.' + socket[2] + '.' + socket[3];
-        int dataSocket_port = Integer.parseInt(socket[4]) * 256 + Integer.parseInt(socket[5]);
-        dataSocket = new Socket(dataSocket_IP, dataSocket_port);
-        getFileDir();
+
+        PASV();
+        return getFileDir();
     }
 
-    void getFileDir() throws IOException {
+    private ArrayList<FileInfo> getFileDir() throws IOException {
         // TODO 获得文件列表
+        ArrayList<FileInfo> files = new ArrayList<>();
         // 使用List命令获得文件列表
         writer.println("List");
         writer.flush();
@@ -57,32 +47,48 @@ public class Client {
             String lineBytes = new String(line.getBytes("ISO-8859-1"), "utf-8");
             String[] fileInfo = getFileInfo(lineBytes);
             FileInfo file = new FileInfo(fileInfo[2], fileInfo[1], Integer.parseInt(fileInfo[0]));
-            System.out.println(file);
+            files.add(file);
+            System.out.println(file);// 标准输出文件信息
         }
+        dataReader.close();
         response = reader.readLine();
         System.out.println(response); // 226 Transfer OK
+        return files;
     }
 
-    void downloadFile(String filename) throws IOException {
+    void downloadFile(String filename, String localPath) throws IOException {
         // TODO 下载文件
         // 客户端和FTP服务器建立Socket连接
         // 向服务器发送USER、PASS命令登录FTP服务器
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
         // 使用RETR命令下载文件
+        System.out.println("下载到目录 " + localPath);
+        PASV();
         writer.println("RETR " + filename);
         writer.flush();
         response = reader.readLine();
-        System.out.println(response);
-        // 从数据端口中接收数据，保存到本地磁盘
+        System.out.println(response);// 150 Opening data channel for file transfer.
+        File newFile = new File(localPath + "/" + filename);
+        BufferedReader dataReader = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));// 读数据端口
+        BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(newFile)));// 写到本地磁盘
+        String line = "";
+        while ((line = dataReader.readLine()) != null) {
+            String lineBytes = new String(line.getBytes("ISO-8859-1"), "utf-8");
+            fileWriter.write(lineBytes + "\n");
+        }
+        dataReader.close();
+        fileWriter.close();
+        System.out.println("下载完成");
         // 在下载完毕后断开数据连接并发送QUIT命令退出
     }
 
-    void uploadFile() throws IOException {
+    void uploadFile(File file) throws IOException {
         // TODO 上传文件
-        writer.println("STOR ");
+        writer.println("STOR "); // filename??
         writer.flush();
         response = reader.readLine();
-        System.out.println(response);
+        System.out.println(response);// 150 Opening data channel for file transfer.
+
     }
 
     void disConnect() throws IOException {
@@ -140,6 +146,20 @@ public class Client {
             res[2] = m.group(3);
         }
         return res;
+    }
+
+    void PASV() throws IOException {
+        // 使用PASV命令得到服务器监听的端口号，建立数据连接
+        writer.println("PASV");
+        writer.flush();
+        response = reader.readLine(); // "227 entering passive mode (h1,h2,h3,h4,p1,p2)"
+        System.out.println(response);
+
+        // 使用p1*256+p2计算出数据端口，连接数据端口，准备接收数据
+        String[] socket = getSocket(response);
+        String dataSocket_IP = socket[0] + '.' + socket[1] + '.' + socket[2] + '.' + socket[3];
+        int dataSocket_port = Integer.parseInt(socket[4]) * 256 + Integer.parseInt(socket[5]);
+        dataSocket = new Socket(dataSocket_IP, dataSocket_port);
     }
 }
 
