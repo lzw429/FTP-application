@@ -23,7 +23,7 @@
           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="主机"/>
+          <text value="主机名"/>
         </properties>
       </component>
       <component id="24832" class="javax.swing.JTextField">
@@ -69,7 +69,7 @@
           <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="目录"/>
+          <text value="服务器目录"/>
         </properties>
       </component>
       <component id="11e2e" class="javax.swing.JButton" binding="fileChooseButton">
@@ -103,7 +103,7 @@
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="用户"/>
+          <text value="用户名"/>
         </properties>
       </component>
       <component id="c7328" class="javax.swing.JTextField" binding="usernameField">

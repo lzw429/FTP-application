@@ -1,8 +1,5 @@
-import javax.sound.sampled.Line;
 import javax.swing.*;
-import java.awt.event.InputMethodListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -76,8 +73,8 @@ public class startWindow {
                 FileInfo file = fileList.getSelectedValue(); // 将被下载的文件
                 JFileChooser fc = new JFileChooser();
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);// 只能选择目录
-                int getDir = fc.showOpenDialog(new JPanel()); // 选择下载目录
-                if (getDir == JFileChooser.APPROVE_OPTION)// 如果选中目录
+                int fcRes = fc.showOpenDialog(new JPanel()); // 选择下载目的目录
+                if (fcRes == JFileChooser.APPROVE_OPTION)// 如果选中目录
                 {
                     String downloadPath = fc.getSelectedFile().getPath();
                     try {
@@ -96,7 +93,28 @@ public class startWindow {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                //  client.uploadFile();
+                if (!statusLabel.getText().equals("已连接")) {
+                    JOptionPane.showMessageDialog(null, "请连接服务器", "警告", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                JFileChooser fc = new JFileChooser();// 选择要上传的文件
+                fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES); // 可选择文件或目录
+                int fcRes = fc.showOpenDialog(new JPanel()); // 选择上传的文件或目录
+                if (fcRes == JFileChooser.APPROVE_OPTION) {
+                    File[] files = fc.getSelectedFiles();// 被选中的文件集合
+                    int length = files.length;
+                    int cnt = 0;
+                    for (File file : files) {
+                        try {
+                            client.uploadFile(file);
+                            cnt++;
+                            dataStatus.setText("上传完成：" + cnt + "/" + length);
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                            statusLabel.setText("读写异常");
+                        }
+                    }
+                }
             }
         });
 

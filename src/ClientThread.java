@@ -43,7 +43,8 @@ public class ClientThread extends Thread {
         boolean is_login = false;
         Socket tempSocket = null;
 
-        while (true) {
+        boolean loop = true;
+        while (loop) {
             try {
                 // 获取客户端的命令
                 command = reader.readLine();
@@ -53,7 +54,7 @@ public class ClientThread extends Thread {
                 e.printStackTrace();
                 writer.println("331 Failed to get command");
                 writer.flush();
-                break;
+                loop = false;
             }
 
             // User 命令
@@ -167,7 +168,7 @@ public class ClientThread extends Thread {
                     RandomAccessFile inFile = null;
                     InputStream inSocket = null;
                     try {
-                        inFile = new RandomAccessFile(dir + "/" + arg, "rw");
+                        inFile = new RandomAccessFile(dir + "/" + arg, "rw");// 命令参数arg是文件名，dir是服务器当前目录名
                         inSocket = tempSocket.getInputStream();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -193,6 +194,7 @@ public class ClientThread extends Thread {
             else if (command.toUpperCase().startsWith("QUIT")) {
                 writer.println("221 Goodbye");
                 writer.flush();
+                loop = false;
                 try {
                     Thread.currentThread();
                     Thread.sleep(1000);

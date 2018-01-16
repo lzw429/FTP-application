@@ -63,7 +63,7 @@ public class Client {
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
         // 使用RETR命令下载文件
         System.out.println("下载到目录 " + localPath);
-        PASV();
+        PASV();// dataSocket
         writer.println("RETR " + filename);
         writer.flush();
         response = reader.readLine();
@@ -84,11 +84,13 @@ public class Client {
 
     void uploadFile(File file) throws IOException {
         // TODO 上传文件
-        writer.println("STOR "); // filename??
+        String fileName = file.getName();
+        System.out.println("上传文件 "+fileName);
+        PASV();// dataSocket
+        writer.println("STOR " + fileName);
         writer.flush();
         response = reader.readLine();
         System.out.println(response);// 150 Opening data channel for file transfer.
-
     }
 
     void disConnect() throws IOException {
