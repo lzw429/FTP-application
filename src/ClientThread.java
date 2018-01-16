@@ -114,7 +114,7 @@ public class ClientThread extends Thread {
 
             // Size 命令：使用命令端口返回文件大小
             else if (command.toUpperCase().startsWith("SIZE")) {
-                arg = command.substring(4).trim();
+                arg = command.substring(4).trim(); // 参数是文件名
                 if (arg.equals("")) {
                     writer.println("501 Syntax error");
                     writer.flush();
@@ -124,20 +124,22 @@ public class ClientThread extends Thread {
                 if (!file.exists()) // 文件不存在，即大小为0
                 {
                     writer.println("213 0");
+                    System.out.println(arg + " doesn't exist on this server right now.");
                     writer.flush();
                 } else if (file.isFile()) {
                     int size = (int) file.length();
                     writer.println("213 " + size);
-                    System.out.println("The size of" + dir + "/" + arg + " is " + size + " byte.");
+                    System.out.println("The size of " + arg + " on this server is " + size + " bytes.");
                     writer.flush();
                 }
             }// end SIZE
 
             // REST 命令
+            else if (command.toUpperCase().startsWith())
 
             // RETR 命令：客户端从服务器下载文件
             else if (command.toUpperCase().startsWith("RETR")) {
-                arg = command.substring(4).trim();
+                arg = command.substring(4).trim(); // 参数是文件名
                 if (arg.equals("")) {
                     writer.println("501 Syntax error");
                     writer.flush();
@@ -173,7 +175,7 @@ public class ClientThread extends Thread {
 
             // STOR 命令：客户端上传文件到服务器
             else if (command.toUpperCase().startsWith("STOR")) {
-                arg = command.substring(4).trim();
+                arg = command.substring(4).trim(); // 参数是文件名
                 if (arg.equals("")) {
                     writer.println("501 Syntax error");
                     writer.flush();

@@ -1,5 +1,11 @@
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -114,25 +120,23 @@ public class startWindow {
             }
         });
 
-        disConnectButton.addMouseListener(new
-
-                                                  MouseAdapter() {
-                                                      // 断开按钮被按下
-                                                      @Override
-                                                      public void mouseClicked(MouseEvent e) {
-                                                          super.mouseClicked(e);
-                                                          if (!statusLabel.getText().equals("已连接"))
-                                                              return;
-                                                          try {
-                                                              client.disConnect();
-                                                              statusLabel.setText("已断开");
-                                                              dataStatus.setText("");
-                                                              fileList.setModel(new DefaultListModel<>());
-                                                          } catch (IOException e1) {
-                                                              e1.printStackTrace();
-                                                          }
-                                                      }
-                                                  });
+        disConnectButton.addMouseListener(new MouseAdapter() {
+            // 断开按钮被按下
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (!statusLabel.getText().equals("已连接"))
+                    return;
+                try {
+                    client.disConnect();
+                    statusLabel.setText("已断开");
+                    dataStatus.setText("");
+                    fileList.setModel(new DefaultListModel<>());
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {

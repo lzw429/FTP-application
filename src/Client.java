@@ -93,31 +93,31 @@ public class Client {
         String fileName = file.getName();
         System.out.println("上传文件 " + fileName);
         PASV();// dataSocket
-        writer.println("SIZE");
+
+        writer.println("SIZE " + fileName);
         writer.flush();
         response = reader.readLine();
-        int size = getSize(response);
-        if (size == 0)// 文件不存在，从头开始上传
-        {
-            writer.println("STOR " + fileName);
-            writer.flush();
-            response = reader.readLine();
-            System.out.println(response);// 150 Opening data channel for file transfer.
+        long size = getSize(response);
+        System.out.println("The size of " + fileName + " on the server is " + size + " bytes.");
 
-            BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
-            BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = fileReader.read(buffer)) != -1) {
-                dataWriter.write(buffer, 0, len);
-            }
-            // 在上传完毕后断开数据连接
-            dataWriter.close();
-            fileReader.close();
-            System.out.println(fileName + " 上传完成");
-        } else if (size > 0) {
-            
+        writer.println("STOR " + fileName);
+        writer.flush();
+        response = reader.readLine();
+        System.out.println(response);// 150 Opening data channel for file transfer.
+
+        BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
+        BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
+        long skipSize = fileReader.skip(size);
+        System.out.println(skipSize + " bytes has been actually skipped.");
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = fileReader.read(buffer)) != -1) {
+            dataWriter.write(buffer, 0, len);
         }
+        // 在上传完毕后断开数据连接
+        dataWriter.close();
+        fileReader.close();
+        System.out.println(fileName + " 上传完成");
     }
 
     void disConnect() throws IOException {
