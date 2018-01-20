@@ -17,7 +17,7 @@ public class Server {
                 // 接受客户端请求
                 Socket client = ss.accept();
                 // 创建服务线程
-                new ClientThread(client, F_DIR).start();
+                new ThreadOnServer(client, F_DIR).start();
                 System.out.println(client.toString() + "  " + F_DIR);
             }
         } catch (Exception e) {
@@ -30,23 +30,32 @@ public class Server {
         File dir = new File(path);
         if (!dir.isDirectory()) {
             writer.println("500 No such file or directory.");
+            writer.flush();
             System.out.println("500 No such file or directory.  " + path);
         }
 
-        File files[] = dir.listFiles();
+        String files[] = dir.list();
         if (files == null)
             return;
 
         String fileDate;
-        for (File file : files) {
+        for (String fileName : files) {
+            File file = new File(path + "/" + fileName);
             fileDate = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new Date(file.lastModified()));
             String filename = new String(file.getName().getBytes("utf-8"), "ISO-8859-1");
-            if (file.isDirectory()) {
-                writer.println(fileDate + " " + filename);
-            } else {
+            if (file.isDirectory()) { // file是文件夹
+                File[] filesInDir = file.listFiles();
+                int dirLength = 0;
+                assert filesInDir != null;
+                for (int i = 0; i != filesInDir.length; i++) {
+                    dirLength += filesInDir[i].length();
+                }
+                writer.println(dirLength + " " + fileDate + " directory:" + filename);
+                writer.flush();
+            } else { // file是文件
                 writer.println(file.length() + " " + fileDate + " " + filename);
+                writer.flush();
             }
-            writer.flush();
         }
     }
 }

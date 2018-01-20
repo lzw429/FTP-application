@@ -6,12 +6,12 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.Random;
 
-public class ClientThread extends Thread {
+public class ThreadOnServer extends Thread {
     private Socket socketClient; // 客户端套接字
     private String dir; // 路径
     private final static Random generator = new Random();// 随机数生成器
 
-    public ClientThread(Socket client, String F_DIR) {
+    public ThreadOnServer(Socket client, String F_DIR) {
         this.socketClient = client;
         this.dir = F_DIR;
     }
@@ -251,6 +251,7 @@ public class ClientThread extends Thread {
                     writer.flush();
                 }
             }
+
             // LIST 命令：列出服务器指定目录下的文件信息，包括文件大小、文件最后修改时间和文件名称
             else if (command.toUpperCase().startsWith("LIST")) {
                 try {

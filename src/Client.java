@@ -183,11 +183,31 @@ public class Client {
     }
 
     private String[] getFileInfo(String txt) {
+        //"123 2018/01/15 08:19:42 filename"
         String re1 = "(\\d+)";    // Integer Number 1
         String re2 = ".*?";    // Non-greedy match on filler
         String re3 = "((?:2|1)\\d{3}(?:-|\\/)(?:(?:0[1-9])|(?:1[0-2]))(?:-|\\/)(?:(?:0[1-9])|(?:[1-2][0-9])|(?:3[0-1]))(?:T|\\s)(?:(?:[0-1][0-9])|(?:2[0-3])):(?:[0-5][0-9]):(?:[0-5][0-9]))";    // Time Stamp 1
         String re4 = ".*?";    // Non-greedy match on filler
-        String re5 = "((?:[a-z][a-z\\.\\d_]+)\\.(?:[a-z\\d]{3}))(?![\\w\\.])";    // File Name 1
+        String re5 = "((?:[a-z][a-z]*[0-9]+[a-z0-9]*))";       // File name or directory name
+
+        Pattern p = Pattern.compile(re1 + re2 + re3 + re4 + re5, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Matcher m = p.matcher(txt);
+        String res[] = new String[3];
+        if (m.find()) {
+            res[0] = m.group(1);
+            res[1] = m.group(2);
+            res[2] = m.group(3);
+        }
+        return res;
+    }
+
+    private String[] getDirInfo(String txt) {
+        //"123 2018/01/15 08:19:42 testDir"
+        String re1 = "(\\d+)";    // Integer Number 1
+        String re2 = ".*?";    // Non-greedy match on filler
+        String re3 = "((?:2|1)\\d{3}(?:-|\\/)(?:(?:0[1-9])|(?:1[0-2]))(?:-|\\/)(?:(?:0[1-9])|(?:[1-2][0-9])|(?:3[0-1]))(?:T|\\s)(?:(?:[0-1][0-9])|(?:2[0-3])):(?:[0-5][0-9]):(?:[0-5][0-9]))";    // Time Stamp 1
+        String re4 = ".*?";    // Non-greedy match on filler
+        String re5 = "((?:[a-z][a-z0-9_]*))";    // Variable Name 1
 
         Pattern p = Pattern.compile(re1 + re2 + re3 + re4 + re5, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
         Matcher m = p.matcher(txt);
@@ -228,4 +248,3 @@ public class Client {
         dataSocket = new Socket(dataSocket_IP, dataSocket_port);
     }
 }
-
