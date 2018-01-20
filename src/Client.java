@@ -46,8 +46,13 @@ public class Client {
         String line = "";
         while ((line = dataReader.readLine()) != null) {
             String[] fileInfo = getFileInfo(line);
+            int fileType = 0;
             try {
-                FileInfo file = new FileInfo(fileInfo[2], fileInfo[1], Integer.parseInt(fileInfo[0]));
+                if (fileInfo[1].equals("f"))
+                    fileType = FileInfo.FILE_TYPE;
+                else if (fileInfo[1].equals("d"))
+                    fileType = FileInfo.DIR_TYPE;
+                FileInfo file = new FileInfo(Integer.parseInt(fileInfo[0]), fileType, fileInfo[2], fileInfo[3]);
                 files.add(file);
                 System.out.println(file);// 标准输出文件信息
             } catch (NumberFormatException e) {
@@ -186,19 +191,23 @@ public class Client {
     }
 
     private String[] getFileInfo(String txt) {
+        // 通过正则表达式，从response获得文件信息
         String re1 = "(\\d+)";    // Integer 1
         String re2 = "( )";    // White Space 1
-        String re3 = "((?:2|1)\\d{3}(?:-|\\/)(?:(?:0[1-9])|(?:1[0-2]))(?:-|\\/)(?:(?:0[1-9])|(?:[1-2][0-9])|(?:3[0-1]))(?:T|\\s)(?:(?:[0-1][0-9])|(?:2[0-3])):(?:[0-5][0-9]):(?:[0-5][0-9]))";    // Time Stamp 1
+        String re3 = "(.)";    // Any Single Character 1
         String re4 = "( )";    // White Space 2
-        String re5 = "(.*)";    // Alphanum 1
+        String re5 = "((?:2|1)\\d{3}(?:-|\\/)(?:(?:0[1-9])|(?:1[0-2]))(?:-|\\/)(?:(?:0[1-9])|(?:[1-2][0-9])|(?:3[0-1]))(?:T|\\s)(?:(?:[0-1][0-9])|(?:2[0-3])):(?:[0-5][0-9]):(?:[0-5][0-9]))";    // Time Stamp 1
+        String re6 = "( )";    // White Space 3
+        String re7 = "(.*)";    // Filename or Directory name
 
-        Pattern p = Pattern.compile(re1 + re2 + re3 + re4 + re5, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+        Pattern p = Pattern.compile(re1 + re2 + re3 + re4 + re5 + re6 + re7, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
         Matcher m = p.matcher(txt);
-        String res[] = new String[3];
+        String res[] = new String[4];
         if (m.find()) {
             res[0] = m.group(1);
             res[1] = m.group(3);
             res[2] = m.group(5);
+            res[3] = m.group(7);
         }
         return res;
     }

@@ -49,10 +49,10 @@ public class Server {
                 for (int i = 0; i != filesInDir.length; i++) {
                     dirLength += filesInDir[i].length();
                 }
-                writer.println(dirLength + " " + fileDate + " 目录:" + file.getName());
+                writer.println(dirLength + " d " + fileDate + " " + file.getName());
                 writer.flush();
-            } else { // file是文件
-                writer.println(file.length() + " " + fileDate + " " + file.getName());
+            } else { // 如果file是文件
+                writer.println(file.length() + " f " + fileDate + " " + file.getName());
                 writer.flush();
             }
         }
