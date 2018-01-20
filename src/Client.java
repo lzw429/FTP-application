@@ -45,8 +45,7 @@ public class Client {
         BufferedReader dataReader = new BufferedReader(new InputStreamReader(dataSocket.getInputStream()));
         String line = "";
         while ((line = dataReader.readLine()) != null) {
-            String lineBytes = new String(line.getBytes("ISO-8859-1"), "utf-8");
-            String[] fileInfo = getFileInfo(lineBytes);
+            String[] fileInfo = getFileInfo(line);
             try {
                 FileInfo file = new FileInfo(fileInfo[2], fileInfo[1], Integer.parseInt(fileInfo[0]));
                 files.add(file);

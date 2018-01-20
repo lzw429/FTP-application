@@ -41,19 +41,18 @@ public class Server {
         String fileDate;
         for (String fileName : files) {
             File file = new File(path + "/" + fileName);
-            fileDate = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new Date(file.lastModified()));
-            String filename = new String(file.getName().getBytes("utf-8"), "ISO-8859-1");
-            if (file.isDirectory()) { // file是文件夹
+            fileDate = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new Date(file.lastModified())); // 能获取文件或文件夹的最后修改时间
+            if (file.isDirectory()) { // 如果file是文件夹
                 File[] filesInDir = file.listFiles();
                 int dirLength = 0;
                 assert filesInDir != null;
                 for (int i = 0; i != filesInDir.length; i++) {
                     dirLength += filesInDir[i].length();
                 }
-                writer.println(dirLength + " " + fileDate + " directory:" + filename);
+                writer.println(dirLength + " " + fileDate + " 目录:" + file.getName());
                 writer.flush();
             } else { // file是文件
-                writer.println(file.length() + " " + fileDate + " " + filename);
+                writer.println(file.length() + " " + fileDate + " " + file.getName());
                 writer.flush();
             }
         }
