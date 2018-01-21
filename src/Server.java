@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 
 public class Server {
     public static void main(String[] args) {
@@ -25,7 +26,7 @@ public class Server {
         }
     }
 
-    public static void getFileInfo(PrintWriter writer, String path) throws UnsupportedEncodingException {
+    public static void getFileInfo(PrintWriter writer, String path) {
         // 获取服务器上的文件信息
         File dir = new File(path);
         if (!dir.isDirectory()) {
@@ -43,12 +44,28 @@ public class Server {
             File file = new File(path + "/" + fileName);
             fileDate = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new Date(file.lastModified())); // 能获取文件或文件夹的最后修改时间
             if (file.isDirectory()) {
-                // 如果file是文件夹
+                // 如果file是文件夹，层次遍历以获得整个文件夹的大小
                 File[] filesInDir = file.listFiles();
+                LinkedList<File> list = new LinkedList<>();
                 int dirLength = 0;
-                assert filesInDir != null;
-                for (int i = 0; i != filesInDir.length; i++) {
-                    dirLength += filesInDir[i].length();
+                if (filesInDir != null && filesInDir.length != 0) {
+                    for (File f : filesInDir) {
+                        if (f.isDirectory()) {
+                            list.add(f);
+                        } else {
+                            dirLength += f.length();
+                        }
+                    }
+                    File curFile;
+                    while (!list.isEmpty()) {
+                        curFile = list.removeFirst(); // curFile 必定是文件夹
+                        File[] fL = curFile.listFiles();
+                        for (File f : fL) {
+                            if (f.isDirectory())
+                                list.add(f);
+                            else dirLength += f.length();
+                        }
+                    }
                 }
                 writer.println(dirLength + " d " + fileDate + " " + file.getName());
                 writer.flush();
@@ -60,4 +77,3 @@ public class Server {
         }
     }
 }
-

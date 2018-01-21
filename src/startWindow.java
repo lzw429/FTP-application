@@ -88,6 +88,7 @@ public class startWindow {
                     {
                         try {
                             client.downloadDir(file, downloadPath, dirField.getText());
+                            dataStatus.setText("下载完成");
                         } catch (IOException e1) {
                             e1.printStackTrace();
                             statusLabel.setText("读写异常");
