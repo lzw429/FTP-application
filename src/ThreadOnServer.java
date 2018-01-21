@@ -125,7 +125,8 @@ public class ThreadOnServer extends Thread {
                     writer.println("213 0");
                     System.out.println(arg + " doesn't exist on this server right now.");
                     writer.flush();
-                } else if (file.isFile()) {
+                } else if (file.isFile()) // 文件存在，获取大小
+                {
                     int size = (int) file.length();
                     writer.println("213 " + size);
                     System.out.println("The size of " + arg + " on this server is " + size + " bytes.");
@@ -219,6 +220,21 @@ public class ThreadOnServer extends Thread {
                     e.printStackTrace();
                 }
             }// end STOR
+
+            // MKD 命令：创建目录
+            else if (command.toUpperCase().startsWith("MKD")) {
+                arg = command.substring(3).trim(); // 参数是文件名
+                File newDir = new File(dir + "/" + arg);
+                if (!newDir.mkdir()) // 创建文件夹
+                {
+                    writer.println("Directory " + newDir.getName() + " cannot be created.");
+                    writer.flush();
+                } else {
+                    writer.println("Directory " + newDir.getName() + " has been created.");
+                    writer.flush();
+                }
+
+            }
 
             // QUIT 命令：断开连接
             else if (command.toUpperCase().startsWith("QUIT")) {

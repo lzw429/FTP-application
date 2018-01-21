@@ -26,7 +26,7 @@ public class Server {
     }
 
     public static void getFileInfo(PrintWriter writer, String path) throws UnsupportedEncodingException {
-        // TODO 获取服务器上的文件信息
+        // 获取服务器上的文件信息
         File dir = new File(path);
         if (!dir.isDirectory()) {
             writer.println("500 No such file or directory.");
@@ -42,7 +42,8 @@ public class Server {
         for (String fileName : files) {
             File file = new File(path + "/" + fileName);
             fileDate = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new Date(file.lastModified())); // 能获取文件或文件夹的最后修改时间
-            if (file.isDirectory()) { // 如果file是文件夹
+            if (file.isDirectory()) {
+                // 如果file是文件夹
                 File[] filesInDir = file.listFiles();
                 int dirLength = 0;
                 assert filesInDir != null;
@@ -51,7 +52,8 @@ public class Server {
                 }
                 writer.println(dirLength + " d " + fileDate + " " + file.getName());
                 writer.flush();
-            } else { // 如果file是文件
+            } else {
+                // 如果file是文件
                 writer.println(file.length() + " f " + fileDate + " " + file.getName());
                 writer.flush();
             }

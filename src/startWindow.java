@@ -108,18 +108,12 @@ public class startWindow {
                             statusLabel.setText("读写异常");
                         }
                     } else if (file.isDirectory()) { // 上传文件夹
-                        String files[] = file.list();
-                        int len = files.length;
-                        for (int i = 0; i < len; i++) {
-                            File f = new File(file.getPath() + "/" + files[i]);
-                            try {
-                                client.uploadFile(f);
-                                int No = i + 1;
-                                dataStatus.setText("上传完成：" + No + "/" + len);
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                                statusLabel.setText("读写异常");
-                            }
+                        try {
+                            client.uploadDir(file, dirField.getText());
+                            dataStatus.setText("上传完成");
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                            statusLabel.setText("读写异常");
                         }
                     }
                 }

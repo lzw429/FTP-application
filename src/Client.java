@@ -1,7 +1,9 @@
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +36,7 @@ public class Client {
     }
 
     private ArrayList<FileInfo> getFileDir() throws IOException {
-        // TODO 获得文件列表
+        // 获得文件列表
         ArrayList<FileInfo> files = new ArrayList<>();
         // 使用List命令获得文件列表
         writer.println("List");
@@ -66,7 +68,7 @@ public class Client {
     }
 
     void downloadFile(String filename, String localPath) throws IOException {
-        // TODO 下载文件
+        // 下载文件
         // 使用PASV命令得到服务器监听的端口号，建立数据连接
         System.out.println("下载到目录 " + localPath);
         PASV();// dataSocket
@@ -101,40 +103,89 @@ public class Client {
     }
 
     void uploadFile(File file) throws IOException {
-        // TODO 上传文件
+        // 上传文件
+        String fileName = file.getName();
+        System.out.println("上传文件 " + fileName);
+        PASV(); // dataSocket
 
-        if (file.isFile()) { // 上传文件
-            String fileName = file.getName();
-            System.out.println("上传文件 " + fileName);
-            PASV();// dataSocket
+        // 如果服务器存在该文件，使用SIZE命令指定偏移量，实现上传断点续传
+        writer.println("SIZE " + fileName);
+        writer.flush();
+        response = reader.readLine();
+        long size = getSize(response);
+        System.out.println("The size of " + fileName + " on the server is " + size + " bytes.");
 
-            // 如果服务器存在该文件，使用SIZE命令指定偏移量，实现上传断点续传
-            writer.println("SIZE " + fileName);
-            writer.flush();
-            response = reader.readLine();
-            long size = getSize(response);
-            System.out.println("The size of " + fileName + " on the server is " + size + " bytes.");
+        writer.println("STOR " + fileName);
+        writer.flush();
+        response = reader.readLine();
+        System.out.println(response); // 150 Opening data channel for file transfer.
 
-            writer.println("STOR " + fileName);
-            writer.flush();
-            response = reader.readLine();
-            System.out.println(response);// 150 Opening data channel for file transfer.
-
-            BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
-            BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
-            long skipSize = fileReader.skip(size);
-            System.out.println(skipSize + " bytes has been actually skipped.");
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = fileReader.read(buffer)) != -1) {
-                dataWriter.write(buffer, 0, len);
-            }
-            // 在上传完毕后断开数据连接
-            dataWriter.close();
-            fileReader.close();
-            System.out.println(fileName + " 上传完成");
-        } else if (file.isDirectory()) { // 上传文件夹
+        BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
+        BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
+        long skipSize = fileReader.skip(size);
+        System.out.println(skipSize + " bytes has been actually skipped.");
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = fileReader.read(buffer)) != -1) {
+            dataWriter.write(buffer, 0, len);
         }
+        // 在上传完毕后断开数据连接
+        dataWriter.close();
+        fileReader.close();
+        System.out.println(fileName + " 上传完成");
+
+    }
+
+    void uploadDir(File dir, String dirPath) throws IOException {
+        // 上传文件夹
+        // 参数 dir：被上传的文件夹；dirPath：文件夹dir在服务器的路径
+        HashMap<File, String> pathMap = new HashMap<>(); // 存储每个文件的相对于服务器上dirPath的路径
+        String dirName = dir.getName();
+        pathMap.put(dir, "/" + dirName);
+        System.out.println("上传文件夹 " + dirName);
+        PASV(); // dataSocket
+
+        writer.println("MKD " + dirName); // 创建文件夹
+        writer.flush();
+        response = reader.readLine(); // 响应创建文件夹的结果
+        System.out.println(response);
+
+        LinkedList<File> list = new LinkedList<File>();
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) { // 文件夹被放入队列
+                list.add(file);
+                pathMap.put(file, pathMap.get(dir) + "/" + file.getName());
+            } else { // 文件直接上传
+                changeDir(dirPath + pathMap.get(file.getParentFile()));
+                uploadFile(new File(file.getPath()));
+            }
+        }
+        File curFile;
+        while (!list.isEmpty()) {
+            curFile = list.removeFirst(); // 队列中的一定是文件夹
+            changeDir(dirPath + pathMap.get(curFile.getParentFile()));
+            writer.println("MKD " + curFile.getName()); // 创建文件夹
+            writer.flush();
+            response = reader.readLine(); // 响应创建文件夹的结果
+            System.out.println(response);
+
+            changeDir(dirPath + pathMap.get(curFile));
+            files = curFile.listFiles(); // files是文件夹curFile的子结点
+            for (File file : files) {
+                if (file.isDirectory()) // 文件夹被放入队列
+                {
+                    list.add(file);
+                    pathMap.put(file, pathMap.get(curFile) + "/" + file.getName());
+                } else // 文件直接上传
+                {
+                    uploadFile(new File(file.getPath()));
+                }
+            }
+        }
+        changeDir(dirPath);
+        System.out.println("文件夹 " + dirName + " 上传完成");
+
     }
 
     void disConnect() throws IOException {
@@ -147,6 +198,8 @@ public class Client {
 
     ArrayList<FileInfo> changeDir(String path) throws IOException {
         // 改变服务器工作目录
+        // 参数path：要转到的服务器目录
+        // 返回转到后的目录的文件列表
         writer.println("CWD " + path);
         writer.flush();
         response = reader.readLine();
