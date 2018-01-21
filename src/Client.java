@@ -1,8 +1,9 @@
+import sun.awt.image.ImageWatched;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,7 +37,7 @@ public class Client {
     }
 
     private ArrayList<FileInfo> getFileDir() throws IOException {
-        // 获得文件列表
+        // 获得文件列表，目录为服务器当前工作目录，如需更改可通过changeDir方法
         ArrayList<FileInfo> files = new ArrayList<>();
         // 使用List命令获得文件列表
         writer.println("List");
@@ -102,6 +103,25 @@ public class Client {
         System.out.println(filename + " 下载完成");
     }
 
+    void downloadDir(String dirname, String localPath, String serverPath) throws IOException {
+        // 下载文件夹
+        // 参数 dirname是将下载的文件夹的名称，localPath是下载到本地的路径，serverPath是文件夹在服务器的路径
+        System.out.println("下载到目录 " + localPath);
+
+        HashMap<FileInfo, String> pathMap = new HashMap<>();
+        File dir = new File(localPath + "/" + dirname);
+        dir.mkdir();
+        pathMap.put(dir, "")
+
+
+        changeDir(serverPath + "/" + dirname);
+        LinkedList<FileInfo> list = new LinkedList<>();
+        ArrayList<FileInfo> fileInfo = getFileDir();
+        while (!list.empty()) {
+
+        }
+    }
+
     void uploadFile(File file) throws IOException {
         // 上传文件
         String fileName = file.getName();
@@ -133,7 +153,6 @@ public class Client {
         dataWriter.close();
         fileReader.close();
         System.out.println(fileName + " 上传完成");
-
     }
 
     void uploadDir(File dir, String dirPath) throws IOException {
@@ -143,7 +162,6 @@ public class Client {
         String dirName = dir.getName();
         pathMap.put(dir, "/" + dirName);
         System.out.println("上传文件夹 " + dirName);
-        PASV(); // dataSocket
 
         writer.println("MKD " + dirName); // 创建文件夹
         writer.flush();
@@ -185,7 +203,6 @@ public class Client {
         }
         changeDir(dirPath);
         System.out.println("文件夹 " + dirName + " 上传完成");
-
     }
 
     void disConnect() throws IOException {

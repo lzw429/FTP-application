@@ -63,23 +63,29 @@ public class startWindow {
                     JOptionPane.showMessageDialog(null, "请连接服务器", "警告", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
-                FileInfo file = fileList.getSelectedValue(); // 将被下载的文件
-                if (file == null) {
-                    JOptionPane.showMessageDialog(null, "请选择文件", "警告", JOptionPane.WARNING_MESSAGE);
+                FileInfo file = fileList.getSelectedValue(); // 将被下载的文件/文件夹
+                if (file == null) // 未选择文件/文件夹
+                {
+                    JOptionPane.showMessageDialog(null, "请选择文件或目录", "警告", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 JFileChooser fc = new JFileChooser();
-                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);// 只能选择目录
-                int fcRes = fc.showOpenDialog(new JPanel()); // 选择下载目的目录
+                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);// 设定选择模式：只能选择目录
+                int fcRes = fc.showOpenDialog(new JPanel()); // 选择下载到的目录
                 if (fcRes == JFileChooser.APPROVE_OPTION)// 如果选中目录
                 {
-                    String downloadPath = fc.getSelectedFile().getPath();
-                    try {
-                        client.downloadFile(file.getFileName(), downloadPath);
-                        dataStatus.setText("下载完成");
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        statusLabel.setText("读写异常");
+                    String downloadPath = fc.getSelectedFile().getPath(); // 下载到的目录
+                    if (file.getType() == FileInfo.FILE_TYPE) // 将下载的类型是文件
+                    {
+                        try {
+                            client.downloadFile(file.getFileName(), downloadPath);
+                            dataStatus.setText("下载完成");
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                            statusLabel.setText("读写异常");
+                        }
+                    } else if (file.getType() == FileInfo.DIR_TYPE) // 将下载的类型是文件夹
+                    {
                     }
                 }
             }
