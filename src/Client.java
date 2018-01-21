@@ -79,7 +79,7 @@ public class Client {
         long size = 0;
         if (downloaded.exists() && downloaded.isFile())
             size = downloaded.length();
-        writer.println("REST " + size);// 将size告知服务器，即使size为0
+        writer.println("REST " + size);// 将size告知服务器，即使size为0；服务器只会传来size后的部分
         writer.flush();
         response = reader.readLine();
         System.out.println(response);
@@ -91,7 +91,7 @@ public class Client {
         System.out.println(response);// 150 Opening data channel for file transfer.
 
         BufferedInputStream dataReader = new BufferedInputStream(dataSocket.getInputStream());// 读数据端口
-        BufferedOutputStream fileWriter = new BufferedOutputStream(new FileOutputStream(downloaded));// 写到本地磁盘
+        RandomAccessFile fileWriter = new RandomAccessFile(downloaded, "rw"); // 写到本地磁盘
         byte[] buffer = new byte[1024];
         int len;
         while ((len = dataReader.read(buffer)) != -1) {
@@ -103,23 +103,52 @@ public class Client {
         System.out.println(filename + " 下载完成");
     }
 
-    void downloadDir(String dirname, String localPath, String serverPath) throws IOException {
+    void downloadDir(FileInfo dir, String localPath, String serverPath) throws IOException {
         // 下载文件夹
-        // 参数 dirname是将下载的文件夹的名称，localPath是下载到本地的路径，serverPath是文件夹在服务器的路径
+        // 参数 dir是将下载的文件夹，localPath是下载到本地的路径，serverPath是文件夹在服务器的路径
         System.out.println("下载到目录 " + localPath);
 
         HashMap<FileInfo, String> pathMap = new HashMap<>();
-        File dir = new File(localPath + "/" + dirname);
-        dir.mkdir();
-        pathMap.put(dir, "")
+        File dirFile = new File(localPath + "/" + dir.getFileName());
+        dirFile.mkdir(); // 创建该目录
+        pathMap.put(dir, "/" + dir.getFileName());
 
-
-        changeDir(serverPath + "/" + dirname);
         LinkedList<FileInfo> list = new LinkedList<>();
+        changeDir(serverPath + pathMap.get(dir));
+        PASV();
         ArrayList<FileInfo> fileInfo = getFileDir();
-        while (!list.empty()) {
-
+        for (FileInfo f : fileInfo) {
+            if (f.getType() == FileInfo.DIR_TYPE) // f是文件夹类型
+            {
+                list.add(f);
+                pathMap.put(f, pathMap.get(dir) + "/" + f.getFileName());
+            } else // f是文件类型
+            {
+                downloadFile(f.getFileName(), localPath + pathMap.get(dir));
+            }
         }
+        FileInfo curFileInfo;
+        while (!list.isEmpty()) {
+            curFileInfo = list.removeFirst(); // 队列中的一定是文件夹
+            File curFile = new File(localPath + pathMap.get(curFileInfo));
+            curFile.mkdir();
+
+            changeDir(serverPath + pathMap.get(curFileInfo));
+            PASV();
+            fileInfo = getFileDir();
+            for (FileInfo f : fileInfo) {
+                if (f.getType() == FileInfo.DIR_TYPE) // 文件夹被放入队列
+                {
+                    list.add(f);
+                    pathMap.put(f, pathMap.get(curFileInfo) + "/" + f.getFileName());
+                } else // 文件直接下载
+                {
+                    downloadFile(f.getFileName(), localPath + pathMap.get(curFileInfo));
+                }
+            }
+        }
+        changeDir(serverPath);
+        System.out.println("文件夹 " + dir.getFileName() + " 下载完成");
     }
 
     void uploadFile(File file) throws IOException {
@@ -128,11 +157,11 @@ public class Client {
         System.out.println("上传文件 " + fileName);
         PASV(); // dataSocket
 
-        // 如果服务器存在该文件，使用SIZE命令指定偏移量，实现上传断点续传
+        // 使用SIZE命令获得文件大小，以实现上传的断点续传
         writer.println("SIZE " + fileName);
         writer.flush();
         response = reader.readLine();
-        long size = getSize(response);
+        long size = getSize(response); // 获得在服务器上的文件大小
         System.out.println("The size of " + fileName + " on the server is " + size + " bytes.");
 
         writer.println("STOR " + fileName);
@@ -142,7 +171,7 @@ public class Client {
 
         BufferedInputStream fileReader = new BufferedInputStream(new FileInputStream(file));// 读本地文件
         BufferedOutputStream dataWriter = new BufferedOutputStream(dataSocket.getOutputStream()); // 写到服务器
-        long skipSize = fileReader.skip(size);
+        long skipSize = fileReader.skip(size); // 上传断点续传
         System.out.println(skipSize + " bytes has been actually skipped.");
         byte[] buffer = new byte[1024];
         int len;

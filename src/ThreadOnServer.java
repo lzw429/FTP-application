@@ -11,7 +11,7 @@ public class ThreadOnServer extends Thread {
     private String dir; // 路径
     private final static Random generator = new Random();// 随机数生成器
 
-    public ThreadOnServer(Socket client, String F_DIR) {
+    ThreadOnServer(Socket client, String F_DIR) {
         this.socketClient = client;
         this.dir = F_DIR;
     }
@@ -162,7 +162,7 @@ public class ThreadOnServer extends Thread {
                     OutputStream outSocket = null;
                     try {
                         outFile = new RandomAccessFile(dir + "/" + arg, "r");// 命令参数arg是文件名，dir是服务器当前目录名；r是读模式
-                        int skipBytes = outFile.skipBytes((int) downloadSkipSize);
+                        int skipBytes = outFile.skipBytes(downloadSkipSize);
                         System.out.println(skipBytes + " bytes of " + arg + " has been actually skipped.");
                         outSocket = tempSocket.getOutputStream();
                     } catch (IOException e) {

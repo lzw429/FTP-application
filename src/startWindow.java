@@ -86,6 +86,12 @@ public class startWindow {
                         }
                     } else if (file.getType() == FileInfo.DIR_TYPE) // 将下载的类型是文件夹
                     {
+                        try {
+                            client.downloadDir(file, downloadPath, dirField.getText());
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                            statusLabel.setText("读写异常");
+                        }
                     }
                 }
             }
