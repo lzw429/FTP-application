@@ -1,3 +1,10 @@
+/**
+ * FTP 服务器，实现了多线程
+ *
+ * @author 舒意恒
+ * @see ThreadOnServer
+ */
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.ServerSocket;

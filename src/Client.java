@@ -1,3 +1,9 @@
+/**
+ * FTP 客户端功能实现
+ *
+ * @author 舒意恒
+ */
+
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;

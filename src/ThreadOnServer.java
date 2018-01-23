@@ -1,3 +1,10 @@
+/**
+ * FTP 服务器线程
+ *
+ * @author 舒意恒
+ * @see Server
+ */
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;

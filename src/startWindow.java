@@ -1,3 +1,10 @@
+/**
+ * FTP 客户端GUI
+ *
+ * @author 舒意恒
+ * @see Client
+ */
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.io.File;

@@ -1,3 +1,10 @@
+/**
+ * 为FTP客户端描述文件信息
+ *
+ * @author 舒意恒
+ * @see Client
+ */
+
 public class FileInfo {
 
     private String fileName;
